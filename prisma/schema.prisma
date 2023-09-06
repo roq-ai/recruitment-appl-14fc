@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions", "postgresqlExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  extensions      = [pgcrypto]
+}
+
+model candidate {
+  id         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name       String      @db.VarChar(255)
+  skills     String      @db.VarChar(255)
+  experience String      @db.VarChar(255)
+  job_id     String      @db.Uuid
+  created_at DateTime    @default(now()) @db.Timestamp(6)
+  updated_at DateTime    @default(now()) @db.Timestamp(6)
+  job        job         @relation(fields: [job_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  interview  interview[]
+}
+
+model employer {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description String?  @db.VarChar(255)
+  name        String   @db.VarChar(255)
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @db.Timestamp(6)
+  user_id     String   @db.Uuid
+  tenant_id   String   @db.VarChar(255)
+  user        user     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  job         job[]
+}
+
+model interview {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date_time    DateTime  @db.Timestamp(6)
+  location     String    @db.VarChar(255)
+  notes        String?   @db.VarChar(255)
+  candidate_id String    @db.Uuid
+  created_at   DateTime  @default(now()) @db.Timestamp(6)
+  updated_at   DateTime  @default(now()) @db.Timestamp(6)
+  candidate    candidate @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model job {
+  id           String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title        String      @db.VarChar(255)
+  description  String      @db.VarChar(255)
+  requirements String      @db.VarChar(255)
+  employer_id  String      @db.Uuid
+  created_at   DateTime    @default(now()) @db.Timestamp(6)
+  updated_at   DateTime    @default(now()) @db.Timestamp(6)
+  candidate    candidate[]
+  employer     employer    @relation(fields: [employer_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model user {
+  id          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email       String     @unique @db.VarChar(255)
+  firstName   String?    @db.VarChar(255)
+  lastName    String?    @db.VarChar(255)
+  roq_user_id String     @db.VarChar(255)
+  tenant_id   String     @db.VarChar(255)
+  created_at  DateTime   @default(now()) @db.Timestamp(6)
+  updated_at  DateTime   @default(now()) @db.Timestamp(6)
+  employer    employer[]
+}
